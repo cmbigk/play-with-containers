@@ -9,11 +9,11 @@ If you've used Python, PostgreSQL, and Postman before, you're halfway there. Her
 ### 1. Vagrant (The Environment Manager)
 *   **What is it?** Vagrant is a tool for building and managing virtual machine (VM) environments.
 *   **Why use it?** It ensures that the project runs exactly same way on your Mac as it does on anyone else's machine. It automates the "it works on my machine" problem.
-*   **In this project:** We use a `Vagrantfile` to automatically create **three separate VMs** (Gateway, Inventory, and Billing). It handles the networking and software installation for each.
+*   **In this project:** We use a `Vagrantfile` to automatically create **three separate VMs** (Gateway, Inventory, and Billing). It handles the networking and software installation for each. Since you're on a Mac, we'll use **VirtualBox** as the "provider."
 
 ### 2. Microservices (The Architecture)
 *   **What is it?** Instead of one giant application (a "monolith"), we break the project into small, independent services that talk to each other.
-*   **Why Virtual Machines?** We use three different VMs to **simulate a real-world distributed system**. Each service lives on its own "server," forcing them to communicate over a network (using HTTP or RabbitMQ) rather than sharing internal memory.
+*   **Why Virtual Machines?** We use three different VMs to **simulate a real-world distributed system**. Each service lives on its own "server," forcing them to communicate over a network (using HTTP or RabbitMQ) rather than sharing internal memory. Using VirtualBox makes this separation very clear.
 
 ### 3. Flask (The Web Framework)
 *   **What is it?** A lightweight Python framework for building web APIs.
@@ -52,17 +52,20 @@ Before jumping into VMs, build the logic locally.
 2.  **Billing API:** Create the consumer script (using `pika`) that listens to RabbitMQ and saves to Postgres.
 3.  **API Gateway:** Build the router that forwards HTTP requests to Inventory and publishes messages to RabbitMQ.
 
-### Phase 2: Vagrant & Provisioning
+### Phase 2: Vagrant & Provisioning (VirtualBox)
 Once the Python code works, automate the setup.
 1.  **Write Scripts:** Create shell scripts to install Python, Postgres, RabbitMQ, and PM2.
-2.  **Configure Vagrantfile:** Define the three VMs and tell Vagrant to run your scripts when they start (`vagrant up`).
+2.  **Configure Vagrantfile:** Define the three VMs and set VirtualBox as the provider.
 
 ### Phase 3: Monitoring & Documentation
 1.  **OpenAPI (Swagger):** Document your Gateway endpoints.
 2.  **PM2 Integration:** Ensure PM2 starts your apps automatically on the VMs.
 3.  **Audit Prep:** Use the `audit.md` sheet to self-test every requirement.
 
-### Advice for Mac (UTM Users)
-Since you're using **UTM** instead of VirtualBox:
-*   Vagrant has a plugin for VMware/UTM, but if you prefer manual setup, you can still use the scripts meant for Vagrant to configure your UTM VMs.
-*   However, if you can get the `vagrant-vmware-desktop` or a generic QEMU provider working for Vagrant, it will save you a lot of time by automating the network configuration between the three VMs.
+### 🍏 Advice for Apple Silicon (M3) Users
+Since you have an **M3 chip**, there are a few things to keep in mind when using VirtualBox with Vagrant:
+
+1.  **VirtualBox Version:** Ensure you are using **VirtualBox 7.0 or newer**. Earlier versions do not support Apple Silicon.
+2.  **Architecture (ARM64):** Your M3 Mac uses `arm64` architecture. When looking for "Vagrant Boxes" (the VM templates), you MUST choose versions that support `arm64` (often labeled as `aarch64` or `arm64`). 
+    *   *Example box:* `bento/ubuntu-22.04-arm64` is a very reliable choice for Apple Silicon.
+3.  **Experimental Status:** VirtualBox on Apple Silicon is technically still a "Developer Preview." If you encounter strange crashes, don't worry—we can adjust settings (like reducing Video RAM or disabling 3D acceleration) to stabilize it.
