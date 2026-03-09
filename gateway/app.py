@@ -28,7 +28,7 @@ def publish_to_billing(order_data):
     connection.close()
 
 
-@app.route("/api/movies", methods=["GET", "POST", "DELETE"])
+@app.route("/api/movies", methods=["GET", "POST", "DELETE"], strict_slashes=False)
 def proxy_movies():
     """Proxy requests related to the movies collection to the Inventory service."""
     try:
@@ -51,7 +51,9 @@ def proxy_movies():
         )
 
 
-@app.route("/api/movies/<int:movie_id>", methods=["GET", "PUT", "DELETE"])
+@app.route(
+    "/api/movies/<int:movie_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False
+)
 def proxy_movie(movie_id):
     """Proxy requests related to a specific movie to the Inventory service."""
     try:
@@ -75,8 +77,8 @@ def proxy_movie(movie_id):
         )
 
 
-@app.route("/api/orders", methods=["POST"])
-def create_order():
+@app.route("/api/billing", methods=["POST"], strict_slashes=False)
+def create_billing_order():
     """Receive order requests and publish them to the billing queue."""
     data = request.get_json()
     if (
@@ -104,7 +106,7 @@ def create_order():
         publish_to_billing(order_payload)
         return (
             jsonify({"message": "Order successfully submitted to billing queue"}),
-            202,
+            200,
         )
     except Exception as e:
         print(f"Failed to publish message: {e}")

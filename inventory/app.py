@@ -34,7 +34,7 @@ class Movie(db.Model):
 
 
 # Routes
-@app.route("/movies", methods=["GET"])
+@app.route("/movies", methods=["GET"], strict_slashes=False)
 def get_movies():
     """Retrieve all movies, optionally filtered by title."""
     title = request.args.get("title")
@@ -45,7 +45,7 @@ def get_movies():
     return jsonify([movie.to_dict() for movie in movies]), 200
 
 
-@app.route("/movies", methods=["DELETE"])
+@app.route("/movies", methods=["DELETE"], strict_slashes=False)
 def delete_all_movies():
     """Delete all movies from the database."""
     db.session.query(Movie).delete()
@@ -53,7 +53,7 @@ def delete_all_movies():
     return jsonify({"message": "All movies deleted"}), 200
 
 
-@app.route("/movies", methods=["POST"])
+@app.route("/movies", methods=["POST"], strict_slashes=False)
 def add_movie():
     """Create a new movie entry."""
     data = request.get_json()
@@ -66,7 +66,7 @@ def add_movie():
     return jsonify(new_movie.to_dict()), 201
 
 
-@app.route("/movies/<int:movie_id>", methods=["GET"])
+@app.route("/movies/<int:movie_id>", methods=["GET"], strict_slashes=False)
 def get_movie(movie_id):
     """Retrieve a single movie by its ID."""
     movie = Movie.query.get(movie_id)
@@ -75,7 +75,7 @@ def get_movie(movie_id):
     return jsonify(movie.to_dict()), 200
 
 
-@app.route("/movies/<int:movie_id>", methods=["PUT"])
+@app.route("/movies/<int:movie_id>", methods=["PUT"], strict_slashes=False)
 def update_movie(movie_id):
     """Update a single movie entry by its ID."""
     movie = Movie.query.get(movie_id)
@@ -95,7 +95,7 @@ def update_movie(movie_id):
     return jsonify(movie.to_dict()), 200
 
 
-@app.route("/movies/<int:movie_id>", methods=["DELETE"])
+@app.route("/movies/<int:movie_id>", methods=["DELETE"], strict_slashes=False)
 def delete_movie(movie_id):
     """Delete a single movie entry by its ID."""
     movie = Movie.query.get(movie_id)

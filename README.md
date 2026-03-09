@@ -12,7 +12,33 @@ This project consists of three main Python microservices:
 Ensure you have the following installed on your system before proceeding:
 - **Python 3.8+**
 - **RabbitMQ**: Used as the message broker between the Gateway and Billing service.
-- **PostgreSQL**: Used by the Billing service as its backend database. Ensure a database named `billing_db` is created.
+- **PostgreSQL**: Used by the Billing service as its backend database. Ensure a database named `orders_db` is created.
+
+## Infrastructure Setup (macOS)
+
+It is assumed you have [Homebrew](https://brew.sh/) installed.
+
+### 1. Install & Start PostgreSQL
+```bash
+brew install postgresql@14
+brew services start postgresql@14
+```
+
+### 2. Create Required Databases
+Once PostgreSQL is running, create the databases needed for the microservices:
+```bash
+psql -d postgres -c "CREATE DATABASE movies_db;"
+psql -d postgres -c "CREATE DATABASE orders_db;"
+```
+
+### 3. Install & Start RabbitMQ
+```bash
+brew install rabbitmq
+# Add RabbitMQ to your PATH (if brew doesn't do it automatically)
+export PATH=$PATH:/usr/local/sbin
+# Start the RabbitMQ service
+brew services start rabbitmq
+```
 
 ## Installation
 
