@@ -11,7 +11,7 @@ DB_HOST = os.environ.get("DB_HOST", "localhost")
 DB_PORT = os.environ.get("DB_PORT", "5432")
 DB_USER = os.environ.get("DB_USER", os.environ.get("USER", "postgres"))
 DB_PASS = os.environ.get("DB_PASS", "")
-DB_NAME = os.environ.get("DB_NAME", "billing_db")
+DB_NAME = os.environ.get("DB_NAME", "orders_db")
 
 db_url = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 engine = create_engine(db_url)
@@ -20,6 +20,8 @@ Base = declarative_base()
 
 
 class Order(Base):
+    """Order model for storing customer orders in the billing database."""
+
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
@@ -36,6 +38,7 @@ QUEUE_NAME = "billing_queue"
 
 
 def process_message(ch, method, properties, body):
+    """Process a message from the billing queue and persist it to the database."""
     try:
         data = json.loads(body)
         print(f" [x] Received order: {data}")
@@ -58,6 +61,7 @@ def process_message(ch, method, properties, body):
 
 
 def main():
+    """Start the RabbitMQ consumer to process billing messages."""
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
 

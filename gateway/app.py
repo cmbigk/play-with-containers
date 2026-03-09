@@ -12,6 +12,7 @@ QUEUE_NAME = "billing_queue"
 
 
 def publish_to_billing(order_data):
+    """Publish an order payload to the RabbitMQ billing queue."""
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
     channel.queue_declare(queue=QUEUE_NAME, durable=True)
@@ -27,15 +28,21 @@ def publish_to_billing(order_data):
     connection.close()
 
 
-@app.route("/api/movies", methods=["GET", "POST"])
+@app.route("/api/movies", methods=["GET", "POST", "DELETE"], strict_slashes=False)
 def proxy_movies():
+    """Proxy requests related to the movies collection to the Inventory service."""
     try:
         if request.method == "GET":
-            resp = requests.get(f"{INVENTORY_URL}/movies")
+            # Pass any query parameters like ?title=name
+            resp = requests.get(f"{INVENTORY_URL}/movies", params=request.args)
             return jsonify(resp.json()), resp.status_code
 
-        elif request.method == "POST":
+        if request.method == "POST":
             resp = requests.post(f"{INVENTORY_URL}/movies", json=request.get_json())
+            return jsonify(resp.json()), resp.status_code
+
+        if request.method == "DELETE":
+            resp = requests.delete(f"{INVENTORY_URL}/movies")
             return jsonify(resp.json()), resp.status_code
     except requests.exceptions.RequestException as e:
         return (
@@ -44,14 +51,23 @@ def proxy_movies():
         )
 
 
-@app.route("/api/movies/<int:movie_id>", methods=["GET", "DELETE"])
+@app.route(
+    "/api/movies/<int:movie_id>", methods=["GET", "PUT", "DELETE"], strict_slashes=False
+)
 def proxy_movie(movie_id):
+    """Proxy requests related to a specific movie to the Inventory service."""
     try:
         if request.method == "GET":
             resp = requests.get(f"{INVENTORY_URL}/movies/{movie_id}")
             return jsonify(resp.json()), resp.status_code
 
-        elif request.method == "DELETE":
+        if request.method == "PUT":
+            resp = requests.put(
+                f"{INVENTORY_URL}/movies/{movie_id}", json=request.get_json()
+            )
+            return jsonify(resp.json()), resp.status_code
+
+        if request.method == "DELETE":
             resp = requests.delete(f"{INVENTORY_URL}/movies/{movie_id}")
             return jsonify(resp.json()), resp.status_code
     except requests.exceptions.RequestException as e:
@@ -61,8 +77,9 @@ def proxy_movie(movie_id):
         )
 
 
-@app.route("/api/orders", methods=["POST"])
-def create_order():
+@app.route("/api/billing", methods=["POST"], strict_slashes=False)
+def create_billing_order():
+    """Receive order requests and publish them to the billing queue."""
     data = request.get_json()
     if (
         not data
@@ -89,7 +106,7 @@ def create_order():
         publish_to_billing(order_payload)
         return (
             jsonify({"message": "Order successfully submitted to billing queue"}),
-            202,
+            200,
         )
     except Exception as e:
         print(f"Failed to publish message: {e}")
