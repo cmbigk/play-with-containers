@@ -27,15 +27,20 @@ def publish_to_billing(order_data):
     connection.close()
 
 
-@app.route("/api/movies", methods=["GET", "POST"])
+@app.route("/api/movies", methods=["GET", "POST", "DELETE"])
 def proxy_movies():
     try:
         if request.method == "GET":
-            resp = requests.get(f"{INVENTORY_URL}/movies")
+            # Pass any query parameters like ?title=name
+            resp = requests.get(f"{INVENTORY_URL}/movies", params=request.args)
             return jsonify(resp.json()), resp.status_code
 
-        elif request.method == "POST":
+        if request.method == "POST":
             resp = requests.post(f"{INVENTORY_URL}/movies", json=request.get_json())
+            return jsonify(resp.json()), resp.status_code
+
+        if request.method == "DELETE":
+            resp = requests.delete(f"{INVENTORY_URL}/movies")
             return jsonify(resp.json()), resp.status_code
     except requests.exceptions.RequestException as e:
         return (
@@ -44,14 +49,20 @@ def proxy_movies():
         )
 
 
-@app.route("/api/movies/<int:movie_id>", methods=["GET", "DELETE"])
+@app.route("/api/movies/<int:movie_id>", methods=["GET", "PUT", "DELETE"])
 def proxy_movie(movie_id):
     try:
         if request.method == "GET":
             resp = requests.get(f"{INVENTORY_URL}/movies/{movie_id}")
             return jsonify(resp.json()), resp.status_code
 
-        elif request.method == "DELETE":
+        if request.method == "PUT":
+            resp = requests.put(
+                f"{INVENTORY_URL}/movies/{movie_id}", json=request.get_json()
+            )
+            return jsonify(resp.json()), resp.status_code
+
+        if request.method == "DELETE":
             resp = requests.delete(f"{INVENTORY_URL}/movies/{movie_id}")
             return jsonify(resp.json()), resp.status_code
     except requests.exceptions.RequestException as e:
