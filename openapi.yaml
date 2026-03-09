@@ -1,0 +1,399 @@
+openapi: 3.0.3
+info:
+  title: CRUD Master - API Gateway
+  description: |
+    API Gateway for the CRUD Master movie streaming platform.
+    
+    This gateway serves as a single entry point for client applications and routes requests to:
+    - **Inventory API**: Movie catalog management via HTTP
+    - **Billing API**: Order processing via RabbitMQ message queue
+    
+    The gateway ensures resilience by queuing billing requests even when the Billing service is temporarily unavailable.
+  version: 1.0.0
+  contact:
+    name: CRUD Master Team
+    
+servers:
+  - url: http://192.168.56.10:5000
+    description: Gateway VM (Production)
+  - url: http://localhost:8080
+    description: Local Development (Port-forwarded)
+
+tags:
+  - name: Movies
+    description: Movie inventory management operations (proxied to Inventory API)
+  - name: Billing
+    description: Order processing operations (queued to RabbitMQ)
+
+paths:
+  /api/movies:
+    get:
+      tags:
+        - Movies
+      summary: Retrieve all movies
+      description: |
+        Fetches all movies from the inventory database.
+        Optionally filter by title using the `title` query parameter.
+      operationId: getAllMovies
+      parameters:
+        - name: title
+          in: query
+          description: Filter movies by title (case-insensitive substring match)
+          required: false
+          schema:
+            type: string
+          example: matrix
+      responses:
+        '200':
+          description: List of movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+              examples:
+                allMovies:
+                  summary: All movies
+                  value:
+                    - id: 1
+                      title: "The Matrix"
+                      description: "A hacker discovers reality is simulated"
+                    - id: 2
+                      title: "Inception"
+                      description: "Dreams within dreams"
+                filteredMovies:
+                  summary: Filtered by title
+                  value:
+                    - id: 1
+                      title: "The Matrix"
+                      description: "A hacker discovers reality is simulated"
+        '503':
+          description: Inventory service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Inventory service unavailable"
+                details: "Connection refused"
+    
+    post:
+      tags:
+        - Movies
+      summary: Create a new movie
+      description: Adds a new movie entry to the inventory database
+      operationId: createMovie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+            example:
+              title: "The Matrix"
+              description: "A hacker discovers reality is simulated"
+      responses:
+        '201':
+          description: Movie created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+              example:
+                id: 1
+                title: "The Matrix"
+                description: "A hacker discovers reality is simulated"
+        '400':
+          description: Invalid input (missing required fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Title is required"
+        '503':
+          description: Inventory service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      tags:
+        - Movies
+      summary: Delete all movies
+      description: Removes all movie entries from the inventory database
+      operationId: deleteAllMovies
+      responses:
+        '200':
+          description: All movies deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "All movies deleted"
+        '503':
+          description: Inventory service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /api/movies/{id}:
+    get:
+      tags:
+        - Movies
+      summary: Retrieve a single movie
+      description: Fetches details of a specific movie by its ID
+      operationId: getMovieById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the movie
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Movie retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+              example:
+                id: 1
+                title: "The Matrix"
+                description: "A hacker discovers reality is simulated"
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Movie not found"
+        '503':
+          description: Inventory service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      tags:
+        - Movies
+      summary: Update a movie
+      description: Updates an existing movie entry by its ID
+      operationId: updateMovie
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the movie to update
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+            example:
+              title: "The Matrix Reloaded"
+              description: "Neo fights the machines"
+      responses:
+        '200':
+          description: Movie updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+              example:
+                id: 1
+                title: "The Matrix Reloaded"
+                description: "Neo fights the machines"
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Movie not found"
+        '503':
+          description: Inventory service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      tags:
+        - Movies
+      summary: Delete a single movie
+      description: Removes a specific movie from the inventory database
+      operationId: deleteMovie
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the movie to delete
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Movie deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Movie deleted"
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Movie not found"
+        '503':
+          description: Inventory service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /api/billing:
+    post:
+      tags:
+        - Billing
+      summary: Submit a billing order
+      description: |
+        Submits an order to the billing queue for asynchronous processing.
+        
+        The order is published to RabbitMQ and will be processed by the Billing service when available.
+        This endpoint remains responsive even if the Billing service is down, ensuring system resilience.
+      operationId: createBillingOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingOrder'
+            example:
+              user_id: "123"
+              number_of_items: "5"
+              total_amount: "99.99"
+      responses:
+        '200':
+          description: Order successfully queued for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Order successfully submitted to billing queue"
+        '400':
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Missing required fields: user_id, number_of_items, total_amount"
+        '503':
+          description: RabbitMQ queue unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Billing service queue unavailable"
+
+components:
+  schemas:
+    Movie:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the movie
+          example: 1
+        title:
+          type: string
+          description: Movie title
+          example: "The Matrix"
+        description:
+          type: string
+          description: Brief description of the movie
+          example: "A hacker discovers reality is simulated"
+    
+    MovieInput:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Movie title
+          minLength: 1
+          maxLength: 100
+          example: "The Matrix"
+        description:
+          type: string
+          description: Brief description of the movie
+          maxLength: 255
+          example: "A hacker discovers reality is simulated"
+    
+    BillingOrder:
+      type: object
+      required:
+        - user_id
+        - number_of_items
+        - total_amount
+      properties:
+        user_id:
+          type: string
+          description: Unique identifier of the user placing the order
+          example: "123"
+        number_of_items:
+          type: string
+          description: Number of items in the order
+          example: "5"
+        total_amount:
+          type: string
+          description: Total cost of the order
+          example: "99.99"
+    
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "An error occurred"
+        details:
+          type: string
+          description: Additional error details (optional)
+          example: "Connection refused"

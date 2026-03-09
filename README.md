@@ -50,14 +50,129 @@ RABBITMQ_PASS=guest
 INVENTORY_URL=http://192.168.56.11:5001
 ```
 
-## 🛠 Manual Management
+## 🛠 Vagrant Management
 
-You can interact with individual VMs using Vagrant commands:
+### Starting the VMs
+
+```bash
+vagrant up
+```
+
+This command will:
+1. Create and boot all 3 VMs (if not already created)
+2. Run all provisioners automatically to install dependencies
+3. Configure databases and message queues
+4. Start all services via PM2
+
+### Stopping the VMs
+
+To gracefully shut down all VMs and free up system resources:
+
+```bash
+vagrant halt
+```
+
+To stop a specific VM:
+
+```bash
+vagrant halt <vm-name>    # e.g., vagrant halt billing-vm
+```
+
+### Why Is `vagrant provision` Necessary?
+
+The `vagrant provision` command re-runs the provisioning scripts without recreating the VMs. This is useful when:
+
+- **Configuration Changes**: You've updated the `.env` file or environment variables
+- **Code Updates**: You've modified application code in `gateway/`, `inventory/`, or `billing/` directories
+- **Script Modifications**: You've changed any provisioning scripts in `scripts/`
+- **Service Restart**: You need to redeploy services with fresh configuration
+
+Provisioning ensures that:
+- Latest environment variables are injected into the VMs
+- Dependencies are up-to-date
+- Services are restarted with the latest code
+- Database schemas are created/updated
+- PM2 processes are refreshed
+
+**To provision all VMs:**
+```bash
+vagrant provision
+```
+
+**To provision a specific VM:**
+```bash
+vagrant provision <vm-name>    # e.g., vagrant provision gateway-vm
+```
+
+**Note:** By default, `vagrant up` runs provisioners automatically. If you use `vagrant reload`, you need to add `--provision` flag to re-run provisioners.
+
+### Other Useful Commands
 
 - **Access a VM**: `vagrant ssh <vm-name>` (e.g., `vagrant ssh billing-vm`)
-- **Process Management**: The services are managed by **PM2** inside the VMs.
-  - List services: `pm2 list`
-  - Stop/Start: `pm2 stop all` / `pm2 start all`
+- **Check VM Status**: `vagrant status`
+- **Reload VM**: `vagrant reload <vm-name>` (restart VM, add `--provision` to re-provision)
+- **Destroy VMs**: `vagrant destroy` (removes VMs completely, you'll need to run `vagrant up` again)
+
+### Process Management (Inside VMs)
+
+The services are managed by **PM2** inside the VMs. After SSH-ing into a VM:
+
+```bash
+pm2 list              # List all running services
+pm2 logs <service>    # View logs for a specific service
+pm2 stop <service>    # Stop a service
+pm2 start <service>   # Start a service
+pm2 restart <service> # Restart a service
+```
+
+Service names:
+- `gateway-service` (on gateway-vm)
+- `inventory-service` (on inventory-vm)
+- `billing-service` (on billing-vm)
+
+## 📖 API Documentation
+
+### OpenAPI/Swagger Specification
+
+The API Gateway is fully documented using the **OpenAPI 3.0** specification. The documentation file is located at:
+
+**📄 [`openapi.yaml`](openapi.yaml)**
+
+This documentation provides:
+- Complete endpoint descriptions for all Gateway routes
+- Request/response schemas with examples
+- HTTP methods and status codes
+- Authentication requirements (if any)
+- Error response formats
+
+### Viewing the Documentation
+
+You can view the OpenAPI documentation using any of these tools:
+
+1. **Swagger Editor** (Online):
+   - Visit [https://editor.swagger.io/](https://editor.swagger.io/)
+   - Copy and paste the contents of `openapi.yaml`
+   - View interactive documentation with "Try it out" feature
+
+2. **VS Code Extension**:
+   - Install the "OpenAPI (Swagger) Editor" extension
+   - Open `openapi.yaml` in VS Code
+   - Preview the documentation
+
+### API Endpoints Summary
+
+#### Movies (Inventory)
+- `GET /api/movies` - Retrieve all movies (with optional title filter)
+- `POST /api/movies` - Create a new movie
+- `DELETE /api/movies` - Delete all movies
+- `GET /api/movies/{id}` - Get a specific movie
+- `PUT /api/movies/{id}` - Update a specific movie
+- `DELETE /api/movies/{id}` - Delete a specific movie
+
+#### Billing (Orders)
+- `POST /api/billing` - Submit an order to the billing queue
+
+**Gateway URL**: `http://192.168.56.10:5000` (or `http://localhost:8080` if port-forwarded)
 
 ## 🧪 Testing
 
