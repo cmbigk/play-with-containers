@@ -128,9 +128,9 @@ You can use `psql` (the command-line interface for PostgreSQL) to directly query
 We can verify the `billing_queue` exists and see its current status via the rabbitmq tools or its built-in management interface.
 
 **Option A: Using the CLI**
-You can use the built-in `rabbitmqctl` tool to list queues:
+Because Homebrew installs these tools in its `sbin` (system binaries) folder, they might not be in your default terminal PATH. You must run them by giving the full path:
 ```bash
-rabbitmqctl list_queues
+/opt/homebrew/sbin/rabbitmqctl list_queues
 ```
 *(You should see `billing_queue` in the list, though the message count should be `0` if the worker script already consumed your test order).*
 
@@ -138,7 +138,7 @@ rabbitmqctl list_queues
 RabbitMQ has an excellent visual UI that makes tracking queues easy.
 1. Enable the management plugin by running:
    ```bash
-   rabbitmq-plugins enable rabbitmq_management
+   /opt/homebrew/sbin/rabbitmq-plugins enable rabbitmq_management
    ```
 2. Open your web browser and navigate to: `http://localhost:15672`
 3. Log in with the default credentials:
