@@ -30,9 +30,15 @@ fi
 echo "Installing dependencies..."
 sudo -u vagrant ./venv/bin/pip install -r requirements.txt
 
-# 4. Start with PM2 as vagrant user
-echo "Starting $SERVICE_NAME with PM2..."
-sudo -u vagrant pm2 start "$START_FILE" --name "$SERVICE_NAME" --interpreter ./venv/bin/python --restart-delay 3000
+# 4. Start or Restart with PM2 as vagrant user
+echo "Starting/Restarting $SERVICE_NAME with PM2..."
+if sudo -u vagrant pm2 list | grep -q "$SERVICE_NAME"; then
+    echo "$SERVICE_NAME already exists in PM2, restarting..."
+    sudo -u vagrant pm2 restart "$SERVICE_NAME"
+else
+    echo "Starting new PM2 process for $SERVICE_NAME..."
+    sudo -u vagrant pm2 start "$START_FILE" --name "$SERVICE_NAME" --interpreter ./venv/bin/python --restart-delay 3000
+fi
 
 # 5. Save PM2 state for vagrant user
 sudo -u vagrant pm2 save

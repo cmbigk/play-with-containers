@@ -8,15 +8,29 @@ echo ">>> Installing PostgreSQL..."
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y postgresql postgresql-contrib
 
-echo ">>> Configuring PostgreSQL for internal access..."
+echo ">>> Configuring PostgreSQL for internal and local access..."
+# Allow all local connections via password
+cat > /etc/postgresql/*/main/pg_hba.conf <<EOF
+local   all             postgres                                peer
+local   all             all                                     md5
+host    all             all             127.0.0.1/32            md5
+host    all             all             192.168.56.0/24         md5
+EOF
+
 sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/*/main/postgresql.conf
-echo "host    all             all             192.168.56.0/24         md5" >> /etc/postgresql/*/main/pg_hba.conf
 
 systemctl restart postgresql
 
 echo ">>> Creating database: $DB_NAME and user: $DB_USER..."
-sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
-sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';"
+sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;" 2>/dev/null || echo "Database $DB_NAME already exists"
+
+if [ "$DB_USER" == "postgres" ]; then
+    echo "Updating password for existing postgres user..."
+    sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$DB_PASS';"
+else
+    sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';" 2>/dev/null || sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';"
+fi
+
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
 
 echo ">>> Database $DB_NAME created and configured."
