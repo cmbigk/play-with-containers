@@ -1,101 +1,71 @@
-# crud-master
+# CRUD Master
 
-VMs and micro services with Vagrant, RabbitMQ, PM2 and Flask
+A microservices-based movie streaming platform architecture using **Vagrant**, **RabbitMQ**, **PM2**, **Flask**, and **PostgreSQL**.
 
-This project consists of three main Python microservices:
-1. **Gateway**: Acts as the API gateway for routing client requests.
-2. **Inventory**: Manages movie data.
-3. **Billing**: Processes orders by consuming messages from RabbitMQ and writing to PostgreSQL.
+This project demonstrates a distributed system where services are isolated in independent virtual machines (VMs) to simulate a production environment.
 
-## Prerequisites
+## 🏗 Architecture Overview
 
-Ensure you have the following installed on your system before proceeding:
-- **Python 3.8+**
-- **RabbitMQ**: Used as the message broker between the Gateway and Billing service.
-- **PostgreSQL**: Used by the Billing service as its backend database. Ensure a database named `orders_db` is created.
+The system is composed of three main microservices:
 
-## Infrastructure Setup (macOS)
+1.  **Gateway VM (`192.168.56.10`)**: The entry point. Routes movie requests via HTTP to Inventory and enqueues billing orders via RabbitMQ.
+2.  **Inventory VM (`192.168.56.11`)**: Manages the movie catalog using a PostgreSQL database (`movies_db`).
+3.  **Billing VM (`192.168.56.12`)**: Processes orders asynchronously from RabbitMQ and persists them to a PostgreSQL database (`orders_db`).
 
-It is assumed you have [Homebrew](https://brew.sh/) installed.
+## 🍏 Prerequisites (macOS Apple Silicon)
 
-### 1. Install & Start PostgreSQL
-```bash
-brew install postgresql@14
-brew services start postgresql@14
+- **VirtualBox 7.0+** (Developer Preview for Arm64)
+- **Vagrant 2.3.4+**
+- **Homebrew** (optional, for local tools)
+
+## 🚀 Quick Start (Vagrant)
+
+The entire environment is automated. Simply follow these steps to spin up the cluster:
+
+1.  **Environment Configuration**: Create a `.env` file in the root directory (see [Configuration](#configuration) below).
+2.  **Start the Cluster**:
+    ```bash
+    vagrant up
+    ```
+    *This will create 3 VMs, install all dependencies, and configure the databases/queues automatically.*
+
+3.  **Verify Status**:
+    ```bash
+    vagrant status
+    ```
+
+## ⚙️ Configuration
+
+The project uses a `.env` file to manage credentials and service locations. This file is injected into the VMs during provisioning.
+
+**Required `.env` Variables:**
+```env
+DB_USER=postgres
+DB_PASS=postgres
+DB_NAME_MOVIES=movies_db
+DB_NAME_ORDERS=orders_db
+RABBITMQ_HOST=192.168.56.12
+RABBITMQ_USER=guest
+RABBITMQ_PASS=guest
+INVENTORY_URL=http://192.168.56.11:5001
 ```
 
-### 2. Create Required Databases
-Once PostgreSQL is running, create the databases needed for the microservices:
-```bash
-psql -d postgres -c "CREATE DATABASE movies_db;"
-psql -d postgres -c "CREATE DATABASE orders_db;"
-```
+## 🛠 Manual Management
 
-### 3. Install & Start RabbitMQ
-```bash
-brew install rabbitmq
-# Add RabbitMQ to your PATH (if brew doesn't do it automatically)
-export PATH=$PATH:/usr/local/sbin
-# Start the RabbitMQ service
-brew services start rabbitmq
-```
+You can interact with individual VMs using Vagrant commands:
 
-## Installation
+- **Access a VM**: `vagrant ssh <vm-name>` (e.g., `vagrant ssh billing-vm`)
+- **Process Management**: The services are managed by **PM2** inside the VMs.
+  - List services: `pm2 list`
+  - Stop/Start: `pm2 stop all` / `pm2 start all`
 
-You will need to install the dependencies for each microservice separately. It is recommended to use virtual environments.
+## 🧪 Testing
 
-### 1. Gateway Setup
-```bash
-cd gateway
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+For detailed instructions on testing the endpoints using Postman, refer to the [Postman Test Guide](postman_instructions.md).
 
-### 2. Inventory Setup
-```bash
-cd inventory
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+## 📐 Design Choices
 
-### 3. Billing Setup
-```bash
-cd billing
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-## Running the Services
-
-To run the full stack, you need to start each service in its own terminal window (or manage them via a process manager like **PM2**). 
-*Note: Make sure RabbitMQ and PostgreSQL are running before starting the services.*
-
-### Start Gateway
-```bash
-cd gateway
-source venv/bin/activate
-FLASK_APP=app.py flask run --port=5000
-# Alternatively: python app.py
-```
-
-### Start Inventory
-```bash
-cd inventory
-source venv/bin/activate
-FLASK_APP=app.py flask run --port=5001
-# Alternatively: python app.py
-```
-
-### Start Billing Worker
-```bash
-cd billing
-source venv/bin/activate
-python worker.py
-```
-
-## Testing
-
-For instructions on how to test the APIs and the message queue using Postman, please refer to the [Postman Test Guide](postman_instructions.md).
+- **Asynchronous Billing**: We use RabbitMQ for billing to ensure the Gateway remains responsive even if the Billing service is under heavy load or temporarily down (resilience).
+- **Network Isolation**: Each service has a static IP on a private network (`192.168.56.0/24`) to enforce clear boundaries.
+- **Automated Provisioning**: Shell scripts in the `scripts/` directory handle the "Heavy Lifting" of installing system dependencies, ensuring the environment is identical across different host machines.
+- **Process Resilience**: PM2 is utilized to keep the Python applications running and handle automatic restarts on failure.
