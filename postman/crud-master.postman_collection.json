@@ -1,192 +1,214 @@
 {
-	"info": {
-		"_postman_id": "599ddaba-43fe-4a87-9fe3-545cafd041f1",
-		"name": "crud-master",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "32777859"
-	},
-	"item": [
-		{
-			"name": "add movie",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "text",
-						"disabled": true
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"title\": \"A new movie\",\n  \"description\": \"Very short description\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:5000/api/movies",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"api",
-						"movies"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get all movies",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5000/api/movies",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"api",
-						"movies"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "place order",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
-		},
-		{
-			"name": "get one movie",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5000/api/movies/1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"api",
-						"movies",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "delete one movie",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5000/api/movies/2",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"api",
-						"movies",
-						"2"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Movie with title",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5000/api/movies?title=[\"atri\"]",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"api",
-						"movies"
-					],
-					"query": [
-						{
-							"key": "title",
-							"value": "[\"atri\"]"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "delete all movies",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5000/api/movies",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"api",
-						"movies"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Update movie",
-			"request": {
-				"method": "PUT",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"title\": \"Matrix 3: Revolutions\",\n  \"description\": \"Neo being neo.\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:5000/api/movies/1",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"api",
-						"movies",
-						"1"
-					]
-				}
-			},
-			"response": []
-		}
-	]
+  "info": {
+    "_postman_id": "599ddaba-43fe-4a87-9fe3-545cafd041f1",
+    "name": "crud-master",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "32777859",
+    "_collection_link": "https://go.postman.co/collection/32777859-599ddaba-43fe-4a87-9fe3-545cafd041f1?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "add movie",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text",
+            "disabled": true
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"A new movie\",\n  \"description\": \"Very short description\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/movies",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "movies"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get all movies",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/movies",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "movies"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "place order",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"41\",\n  \"number_of_items\": \"9\",\n  \"total_amount\": \"20\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/billing",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "billing"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get one movie",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/movies/2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "movies",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "delete one movie",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/movies/2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "movies",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Movie with title",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/movies?title=[\"atri\"]",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "movies"
+          ],
+          "query": [
+            {
+              "key": "title",
+              "value": "[\"atri\"]"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "delete all movies",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/movies",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "movies"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update movie",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Matrix 3: Revolutions\",\n  \"description\": \"Neo being neo.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/movies/6",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "movies",
+            "6"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
 }
