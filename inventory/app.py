@@ -21,18 +21,22 @@ db = SQLAlchemy(app)
 
 # Models
 class Movie(db.Model):
+    """Movie model for storing movie details."""
+
     __tablename__ = "movies"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255), nullable=True)
 
     def to_dict(self):
+        """Return movie details as a dictionary."""
         return {"id": self.id, "title": self.title, "description": self.description}
 
 
 # Routes
 @app.route("/movies", methods=["GET"])
 def get_movies():
+    """Retrieve all movies, optionally filtered by title."""
     title = request.args.get("title")
     if title:
         movies = Movie.query.filter(Movie.title.ilike(f"%{title}%")).all()
@@ -43,6 +47,7 @@ def get_movies():
 
 @app.route("/movies", methods=["DELETE"])
 def delete_all_movies():
+    """Delete all movies from the database."""
     db.session.query(Movie).delete()
     db.session.commit()
     return jsonify({"message": "All movies deleted"}), 200
@@ -50,6 +55,7 @@ def delete_all_movies():
 
 @app.route("/movies", methods=["POST"])
 def add_movie():
+    """Create a new movie entry."""
     data = request.get_json()
     if not data or not data.get("title"):
         return jsonify({"error": "Title is required"}), 400
@@ -62,6 +68,7 @@ def add_movie():
 
 @app.route("/movies/<int:movie_id>", methods=["GET"])
 def get_movie(movie_id):
+    """Retrieve a single movie by its ID."""
     movie = Movie.query.get(movie_id)
     if not movie:
         return jsonify({"error": "Movie not found"}), 404
@@ -70,6 +77,7 @@ def get_movie(movie_id):
 
 @app.route("/movies/<int:movie_id>", methods=["PUT"])
 def update_movie(movie_id):
+    """Update a single movie entry by its ID."""
     movie = Movie.query.get(movie_id)
     if not movie:
         return jsonify({"error": "Movie not found"}), 404
@@ -89,6 +97,7 @@ def update_movie(movie_id):
 
 @app.route("/movies/<int:movie_id>", methods=["DELETE"])
 def delete_movie(movie_id):
+    """Delete a single movie entry by its ID."""
     movie = Movie.query.get(movie_id)
     if not movie:
         return jsonify({"error": "Movie not found"}), 404
@@ -98,6 +107,7 @@ def delete_movie(movie_id):
 
 
 def init_db():
+    """Initialize the database tables."""
     with app.app_context():
         db.create_all()
 

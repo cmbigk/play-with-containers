@@ -12,6 +12,7 @@ QUEUE_NAME = "billing_queue"
 
 
 def publish_to_billing(order_data):
+    """Publish an order payload to the RabbitMQ billing queue."""
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
     channel = connection.channel()
     channel.queue_declare(queue=QUEUE_NAME, durable=True)
@@ -29,6 +30,7 @@ def publish_to_billing(order_data):
 
 @app.route("/api/movies", methods=["GET", "POST", "DELETE"])
 def proxy_movies():
+    """Proxy requests related to the movies collection to the Inventory service."""
     try:
         if request.method == "GET":
             # Pass any query parameters like ?title=name
@@ -51,6 +53,7 @@ def proxy_movies():
 
 @app.route("/api/movies/<int:movie_id>", methods=["GET", "PUT", "DELETE"])
 def proxy_movie(movie_id):
+    """Proxy requests related to a specific movie to the Inventory service."""
     try:
         if request.method == "GET":
             resp = requests.get(f"{INVENTORY_URL}/movies/{movie_id}")
@@ -74,6 +77,7 @@ def proxy_movie(movie_id):
 
 @app.route("/api/orders", methods=["POST"])
 def create_order():
+    """Receive order requests and publish them to the billing queue."""
     data = request.get_json()
     if (
         not data
