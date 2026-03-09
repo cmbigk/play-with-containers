@@ -29,10 +29,10 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/movies",
+          "raw": "http://192.168.56.10:5000/api/movies",
           "protocol": "http",
           "host": [
-            "localhost"
+            "192.168.56.10"
           ],
           "port": "5000",
           "path": [
@@ -49,10 +49,10 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/movies",
+          "raw": "http://192.168.56.10:5000/api/movies",
           "protocol": "http",
           "host": [
-            "localhost"
+            "192.168.56.10"
           ],
           "port": "5000",
           "path": [
@@ -78,10 +78,10 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/billing",
+          "raw": "http://192.168.56.10:5000/api/billing",
           "protocol": "http",
           "host": [
-            "localhost"
+            "192.168.56.10"
           ],
           "port": "5000",
           "path": [
@@ -98,10 +98,10 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/movies/2",
+          "raw": "http://192.168.56.10:5000/api/movies/2",
           "protocol": "http",
           "host": [
-            "localhost"
+            "192.168.56.10"
           ],
           "port": "5000",
           "path": [
@@ -119,10 +119,10 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/movies/2",
+          "raw": "http://192.168.56.10:5000/api/movies/2",
           "protocol": "http",
           "host": [
-            "localhost"
+            "192.168.56.10"
           ],
           "port": "5000",
           "path": [
@@ -140,10 +140,10 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/movies?title=[\"atri\"]",
+          "raw": "http://192.168.56.10:5000/api/movies?title=[\"atri\"]",
           "protocol": "http",
           "host": [
-            "localhost"
+            "192.168.56.10"
           ],
           "port": "5000",
           "path": [
@@ -166,10 +166,10 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/movies",
+          "raw": "http://192.168.56.10:5000/api/movies",
           "protocol": "http",
           "host": [
-            "localhost"
+            "192.168.56.10"
           ],
           "port": "5000",
           "path": [
@@ -195,10 +195,10 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/movies/6",
+          "raw": "http://192.168.56.10:5000/api/movies/6",
           "protocol": "http",
           "host": [
-            "localhost"
+            "192.168.56.10"
           ],
           "port": "5000",
           "path": [

@@ -16,13 +16,13 @@ Vagrant.configure("2") do |config|
 
   # Helper to set environment variables in guest OS
   def set_env(vm, keys_mapping)
-    script = ""
+    script = "echo \"# Auto-generated environmental variables\" > /etc/profile.d/app_env.sh\n"
     keys_mapping.each do |guest_key, host_key|
-      value = ENV[host_key] || host_key # Fallback to literal if not in ENV
-      script += "echo 'export #{guest_key}=#{value}' >> /home/vagrant/.bashrc\n"
-      script += "echo '#{guest_key}=#{value}' >> /etc/environment\n"
+      value = ENV[host_key] || host_key
+      script += "echo \"export #{guest_key}=#{value}\" >> /etc/profile.d/app_env.sh\n"
     end
-    vm.vm.provision "shell", inline: script
+    script += "chmod +x /etc/profile.d/app_env.sh\n"
+    vm.vm.provision "shell", inline: script, run: "always"
   end
 
   # -----------------------------------------------------------------
@@ -31,8 +31,8 @@ Vagrant.configure("2") do |config|
   config.vm.define "gateway-vm" do |gw|
     gw.vm.network "private_network", ip: "192.168.56.10"
     gw.vm.hostname = "gateway"
-    gw.vm.synced_folder "./gateway", "/home/vagrant/gateway"
-    gw.vm.synced_folder ".", "/home/vagrant/project", type: "rsync", rsync__exclude: [".git/", "venv/"]
+    gw.vm.synced_folder "./gateway", "/home/vagrant/gateway", type: "rsync", rsync__exclude: [".git/", "venv/"]
+    gw.vm.synced_folder ".", "/home/vagrant/project", type: "rsync", rsync__exclude: [".git/", "venv/", ".vagrant/"]
 
     gw.vm.provider "virtualbox" do |vb|
       vb.memory = "1024"
@@ -41,6 +41,10 @@ Vagrant.configure("2") do |config|
 
     gw.vm.provision "common", type: "shell", path: "scripts/provision_common.sh"
     gw.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh"
+    
+    # Start Services
+    gw.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh"
+    gw.vm.provision "start-gateway", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/gateway", "gateway-service", "app.py"]
     
     # Inject variables
     set_env(gw, {
@@ -57,8 +61,8 @@ Vagrant.configure("2") do |config|
   config.vm.define "inventory-vm" do |inv|
     inv.vm.network "private_network", ip: "192.168.56.11"
     inv.vm.hostname = "inventory"
-    inv.vm.synced_folder "./inventory", "/home/vagrant/inventory"
-    inv.vm.synced_folder ".", "/home/vagrant/project", type: "rsync", rsync__exclude: [".git/", "venv/"]
+    inv.vm.synced_folder "./inventory", "/home/vagrant/inventory", type: "rsync", rsync__exclude: [".git/", "venv/"]
+    inv.vm.synced_folder ".", "/home/vagrant/project", type: "rsync", rsync__exclude: [".git/", "venv/", ".vagrant/"]
 
     inv.vm.provider "virtualbox" do |vb|
       vb.memory = "1024"
@@ -68,6 +72,10 @@ Vagrant.configure("2") do |config|
     inv.vm.provision "common", type: "shell", path: "scripts/provision_common.sh"
     inv.vm.provision "db", type: "shell", path: "scripts/provision_db.sh", args: [ENV["DB_NAME_MOVIES"], ENV["DB_USER"], ENV["DB_PASS"]]
     inv.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh"
+    
+    # Start Services
+    inv.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh"
+    inv.vm.provision "start-inventory", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/inventory", "inventory-service", "app.py"]
     
     # Inject variables (DB_HOST defaults to localhost for Inventory app connecting to its own DB)
     set_env(inv, {
@@ -84,8 +92,8 @@ Vagrant.configure("2") do |config|
   config.vm.define "billing-vm" do |bill|
     bill.vm.network "private_network", ip: "192.168.56.12"
     bill.vm.hostname = "billing"
-    bill.vm.synced_folder "./billing", "/home/vagrant/billing"
-    bill.vm.synced_folder ".", "/home/vagrant/project", type: "rsync", rsync__exclude: [".git/", "venv/"]
+    bill.vm.synced_folder "./billing", "/home/vagrant/billing", type: "rsync", rsync__exclude: [".git/", "venv/"]
+    bill.vm.synced_folder ".", "/home/vagrant/project", type: "rsync", rsync__exclude: [".git/", "venv/", ".vagrant/"]
 
     bill.vm.provider "virtualbox" do |vb|
       vb.memory = "1024"
@@ -96,6 +104,10 @@ Vagrant.configure("2") do |config|
     bill.vm.provision "db", type: "shell", path: "scripts/provision_db.sh", args: [ENV["DB_NAME_ORDERS"], ENV["DB_USER"], ENV["DB_PASS"]]
     bill.vm.provision "mq", type: "shell", path: "scripts/provision_mq.sh"
     bill.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh"
+    
+    # Start Services
+    bill.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh"
+    bill.vm.provision "start-billing", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/billing", "billing-service", "worker.py"]
     
     # Inject variables (DB_HOST defaults to localhost for Billing app connecting to its own DB)
     set_env(bill, {
