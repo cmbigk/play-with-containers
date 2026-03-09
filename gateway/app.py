@@ -8,12 +8,17 @@ app = Flask(__name__)
 
 INVENTORY_URL = os.environ.get("INVENTORY_URL", "http://localhost:5001")
 RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST", "localhost")
+RABBITMQ_USER = os.environ.get("RABBITMQ_USER", "guest")
+RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS", "guest")
 QUEUE_NAME = "billing_queue"
 
 
 def publish_to_billing(order_data):
     """Publish an order payload to the RabbitMQ billing queue."""
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
+    credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials)
+    )
     channel = connection.channel()
     channel.queue_declare(queue=QUEUE_NAME, durable=True)
 

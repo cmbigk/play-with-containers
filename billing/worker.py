@@ -34,6 +34,8 @@ Base.metadata.create_all(engine)
 
 # RabbitMQ Configuration
 RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST", "localhost")
+RABBITMQ_USER = os.environ.get("RABBITMQ_USER", "guest")
+RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS", "guest")
 QUEUE_NAME = "billing_queue"
 
 
@@ -62,7 +64,10 @@ def process_message(ch, method, properties, body):
 
 def main():
     """Start the RabbitMQ consumer to process billing messages."""
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
+    credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials)
+    )
     channel = connection.channel()
 
     # Declare the queue (durable=True so messages survive broker restarts)
