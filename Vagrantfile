@@ -11,8 +11,8 @@ if File.exist?(".env")
 end
 
 Vagrant.configure("2") do |config|
-  # Using an ARM64 box for Apple Silicon M3
-  config.vm.box = "bento/ubuntu-22.04-arm64"
+  # Using an ARM64 box for Apple Silicon M3 (Ubuntu 24.04 Noble)
+  config.vm.box = "hashicorp-education/ubuntu-24-04"
 
   # Helper to set environment variables in guest OS
   def set_env(vm, keys_mapping)
@@ -65,7 +65,7 @@ Vagrant.configure("2") do |config|
       vb.cpus = 1
     end
 
-    bill.vm.provision "common", type: "shell", path: "scripts/provision_common.sh"
+    inv.vm.provision "common", type: "shell", path: "scripts/provision_common.sh"
     inv.vm.provision "db", type: "shell", path: "scripts/provision_db.sh", args: [ENV["DB_NAME_MOVIES"], ENV["DB_USER"], ENV["DB_PASS"]]
     inv.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh"
     
