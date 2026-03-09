@@ -41,12 +41,12 @@ Vagrant.configure("2") do |config|
       vb.cpus = 1
     end
 
-    gw.vm.provision "common", type: "shell", path: "scripts/provision_common.sh"
-    gw.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh"
+    gw.vm.provision "common", type: "shell", path: "scripts/provision_common.sh", run: "once"
+    gw.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh", run: "once"
     
-    # Start Services
-    gw.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh"
-    gw.vm.provision "start-gateway", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/gateway", "gateway-service", "app.py"]
+    # Start Services (runs on every boot to ensure services are up)
+    gw.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh", run: "always"
+    gw.vm.provision "start-gateway", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/gateway", "gateway-service", "app.py"], run: "always"
     
     # Inject variables
     set_env(gw, {
@@ -71,13 +71,13 @@ Vagrant.configure("2") do |config|
       vb.cpus = 1
     end
 
-    inv.vm.provision "common", type: "shell", path: "scripts/provision_common.sh"
-    inv.vm.provision "db", type: "shell", path: "scripts/provision_db.sh", args: [ENV["DB_NAME_MOVIES"], ENV["DB_USER"], ENV["DB_PASS"]]
-    inv.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh"
+    inv.vm.provision "common", type: "shell", path: "scripts/provision_common.sh", run: "once"
+    inv.vm.provision "db", type: "shell", path: "scripts/provision_db.sh", args: [ENV["DB_NAME_MOVIES"], ENV["DB_USER"], ENV["DB_PASS"]], run: "once"
+    inv.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh", run: "once"
     
-    # Start Services
-    inv.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh"
-    inv.vm.provision "start-inventory", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/inventory", "inventory-service", "app.py"]
+    # Start Services (runs on every boot to ensure services are up)
+    inv.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh", run: "always"
+    inv.vm.provision "start-inventory", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/inventory", "inventory-service", "app.py"], run: "always"
     
     # Inject variables (DB_HOST defaults to localhost for Inventory app connecting to its own DB)
     set_env(inv, {
@@ -102,14 +102,14 @@ Vagrant.configure("2") do |config|
       vb.cpus = 1
     end
 
-    bill.vm.provision "common", type: "shell", path: "scripts/provision_common.sh"
-    bill.vm.provision "db", type: "shell", path: "scripts/provision_db.sh", args: [ENV["DB_NAME_ORDERS"], ENV["DB_USER"], ENV["DB_PASS"]]
-    bill.vm.provision "mq", type: "shell", path: "scripts/provision_mq.sh", args: [ENV["RABBITMQ_USER"], ENV["RABBITMQ_PASS"]]
-    bill.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh"
+    bill.vm.provision "common", type: "shell", path: "scripts/provision_common.sh", run: "once"
+    bill.vm.provision "db", type: "shell", path: "scripts/provision_db.sh", args: [ENV["DB_NAME_ORDERS"], ENV["DB_USER"], ENV["DB_PASS"]], run: "once"
+    bill.vm.provision "mq", type: "shell", path: "scripts/provision_mq.sh", args: [ENV["RABBITMQ_USER"], ENV["RABBITMQ_PASS"]], run: "once"
+    bill.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh", run: "once"
     
-    # Start Services
-    bill.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh"
-    bill.vm.provision "start-billing", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/billing", "billing-service", "worker.py"]
+    # Start Services (runs on every boot to ensure services are up)
+    bill.vm.provision "shell", inline: "chmod +x /home/vagrant/project/scripts/*.sh", run: "always"
+    bill.vm.provision "start-billing", type: "shell", path: "scripts/start_service.sh", args: ["/home/vagrant/billing", "billing-service", "worker.py"], run: "always"
     
     # Inject variables (DB_HOST defaults to localhost for Billing app connecting to its own DB)
     set_env(bill, {
