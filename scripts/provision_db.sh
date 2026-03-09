@@ -8,20 +8,13 @@ echo ">>> Installing PostgreSQL..."
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y postgresql postgresql-contrib
 
-echo ">>> Configuring PostgreSQL for internal and local access..."
-# Allow all local connections via password
+echo ">>> Temporarily allowing all local connections for provisioning..."
 cat > /etc/postgresql/*/main/pg_hba.conf <<EOF
-local   all             postgres                                peer
-local   all             all                                     md5
-host    all             all             127.0.0.1/32            md5
-host    all             all             192.168.56.0/24         md5
+local   all             all                                     trust
 EOF
-
-sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/*/main/postgresql.conf
-
 systemctl restart postgresql
 
-echo ">>> Creating database: $DB_NAME and user: $DB_USER..."
+echo ">>> Creating/Updating database: $DB_NAME and user: $DB_USER..."
 sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;" 2>/dev/null || echo "Database $DB_NAME already exists"
 
 if [ "$DB_USER" == "postgres" ]; then
@@ -33,4 +26,18 @@ fi
 
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
 
+echo ">>> Configuring PostgreSQL for internal and local access..."
+# Apply final md5 security
+cat > /etc/postgresql/*/main/pg_hba.conf <<EOF
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     md5
+host    all             all             127.0.0.1/32            md5
+host    all             all             192.168.56.0/24         md5
+EOF
+
+sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /etc/postgresql/*/main/postgresql.conf
+
+systemctl restart postgresql
+
 echo ">>> Database $DB_NAME created and configured."
+echo ">>> NOTE: If connecting from within the VM, use: psql -U postgres -d $DB_NAME (you will be prompted for password)"
