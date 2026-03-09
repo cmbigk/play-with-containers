@@ -20,6 +20,8 @@ Vagrant.configure("2") do |config|
     keys_mapping.each do |guest_key, host_key|
       value = ENV[host_key] || host_key
       script += "echo \"export #{guest_key}=#{value}\" >> /etc/profile.d/app_env.sh\n"
+      # Also add to /etc/environment for global access (sudo, etc)
+      script += "grep -q \"^#{guest_key}=\" /etc/environment && sed -i \"s|^#{guest_key}=.*|#{guest_key}=#{value}|\" /etc/environment || echo \"#{guest_key}=#{value}\" >> /etc/environment\n"
     end
     script += "chmod +x /etc/profile.d/app_env.sh\n"
     vm.vm.provision "shell", inline: script, run: "always"
@@ -102,7 +104,7 @@ Vagrant.configure("2") do |config|
 
     bill.vm.provision "common", type: "shell", path: "scripts/provision_common.sh"
     bill.vm.provision "db", type: "shell", path: "scripts/provision_db.sh", args: [ENV["DB_NAME_ORDERS"], ENV["DB_USER"], ENV["DB_PASS"]]
-    bill.vm.provision "mq", type: "shell", path: "scripts/provision_mq.sh"
+    bill.vm.provision "mq", type: "shell", path: "scripts/provision_mq.sh", args: [ENV["RABBITMQ_USER"], ENV["RABBITMQ_PASS"]]
     bill.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh"
     
     # Start Services
