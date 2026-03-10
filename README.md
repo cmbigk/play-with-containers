@@ -78,39 +78,12 @@ To stop a specific VM:
 vagrant halt <vm-name>    # e.g., vagrant halt billing-vm
 ```
 
-### Why Is `vagrant provision` Necessary?
-
-The `vagrant provision` command re-runs the provisioning scripts without recreating the VMs. This is useful when:
-
-- **Configuration Changes**: You've updated the `.env` file or environment variables
-- **Code Updates**: You've modified application code in `gateway/`, `inventory/`, or `billing/` directories
-- **Script Modifications**: You've changed any provisioning scripts in `scripts/`
-- **Service Restart**: You need to redeploy services with fresh configuration
-
-Provisioning ensures that:
-- Latest environment variables are injected into the VMs
-- Dependencies are up-to-date
-- Services are restarted with the latest code
-- Database schemas are created/updated
-- PM2 processes are refreshed
-
-**To provision all VMs:**
-```bash
-vagrant provision
-```
-
-**To provision a specific VM:**
-```bash
-vagrant provision <vm-name>    # e.g., vagrant provision gateway-vm
-```
-
-**Note:** By default, `vagrant up` runs provisioners automatically. If you use `vagrant reload`, you need to add `--provision` flag to re-run provisioners.
-
 ### Other Useful Commands
 
 - **Access a VM**: `vagrant ssh <vm-name>` (e.g., `vagrant ssh billing-vm`)
 - **Check VM Status**: `vagrant status`
 - **Reload VM**: `vagrant reload <vm-name>` (restart VM, add `--provision` to re-provision)
+- **Re-run provisioners**: `vagrant provision` or `vagrant provision <vm-name>` — useful after editing `.env`, application code, or provisioning scripts
 - **Destroy VMs**: `vagrant destroy` (removes VMs completely, you'll need to run `vagrant up` again)
 
 ### Process Management (Inside VMs)
@@ -176,7 +149,11 @@ You can view the OpenAPI documentation using any of these tools:
 
 ## 🧪 Testing
 
-For detailed instructions on testing the endpoints using Postman, refer to the [Postman Test Guide](postman_instructions.md).
+For detailed instructions on testing the endpoints with Postman, inspecting PostgreSQL databases, and monitoring RabbitMQ, refer to the [Testing & Inspection Guide](testing_guide.md).
+
+## 📖 Infrastructure Deep-Dive
+
+For a detailed explanation of how the `Vagrantfile` and provisioning scripts work — including what Vagrant, PM2, and RabbitMQ do and why — see the [Infrastructure Explainer](infrastructure_explainer.md).
 
 ## 📐 Design Choices
 
