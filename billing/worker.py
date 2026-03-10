@@ -1,8 +1,10 @@
 import os
+import time
 import pika
 import json
 from sqlalchemy import create_engine, Column, Integer, Float, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.exc import OperationalError as SAOperationalError
 from datetime import datetime
 import sys
 
@@ -14,7 +16,10 @@ DB_PASS = os.environ.get("DB_PASS", "")
 DB_NAME = os.environ.get("DB_NAME", "orders_db")
 
 db_url = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-engine = create_engine(db_url)
+
+# pool_pre_ping tests each connection before use and discards stale ones,
+# preventing "SSL connection closed unexpectedly" errors after Postgres restarts.
+engine = create_engine(db_url, pool_pre_ping=True)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
@@ -30,7 +35,14 @@ class Order(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 
-Base.metadata.create_all(engine)
+# Retry table creation so transient Postgres startup errors don't crash the worker.
+for attempt in range(10):
+    try:
+        Base.metadata.create_all(engine)
+        break
+    except SAOperationalError as e:
+        print(f" [!] DB not ready yet (attempt {attempt + 1}/10): {e}")
+        time.sleep(5)
 
 # RabbitMQ Configuration
 RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST", "localhost")
@@ -56,18 +68,36 @@ def process_message(ch, method, properties, body):
         print(f" [x] Successfully stored order for user {data.get('user_id')}")
         session.close()
 
-        # Acknowledge the message
+        # Acknowledge the message only on success
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         print(f" [!] Error processing message: {e}")
+        # Reject the message and requeue it so it isn't lost
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+
+
+def connect_with_retry(max_attempts=20, delay=5):
+    """Attempt to connect to RabbitMQ, retrying until it is ready."""
+    credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+    params = pika.ConnectionParameters(
+        host=RABBITMQ_HOST,
+        credentials=credentials,
+        connection_attempts=1,
+    )
+    for attempt in range(1, max_attempts + 1):
+        try:
+            print(f" [*] Connecting to RabbitMQ at {RABBITMQ_HOST} (attempt {attempt}/{max_attempts})...")
+            return pika.BlockingConnection(params)
+        except pika.exceptions.AMQPConnectionError as e:
+            if attempt == max_attempts:
+                raise
+            print(f" [!] RabbitMQ not ready, retrying in {delay}s: {e}")
+            time.sleep(delay)
 
 
 def main():
     """Start the RabbitMQ consumer to process billing messages."""
-    credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials)
-    )
+    connection = connect_with_retry()
     channel = connection.channel()
 
     # Declare the queue (durable=True so messages survive broker restarts)

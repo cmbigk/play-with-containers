@@ -6,36 +6,28 @@ START_FILE=$3
 
 echo ">>> Setting up $SERVICE_NAME in $APP_DIR..."
 
-# Ensure we are in the app directory
+# Ensure provisioning scripts are executable (rsync may reset permissions)
+chmod +x /home/vagrant/project/scripts/*.sh
+
 cd $APP_DIR
 
-# 1. Clean up broken or host-synced venvs
-if [ -d "venv" ]; then
-    echo "Found existing venv, checking if it's valid..."
-    # If the interpreter inside venv is invalid, purge it
-    if ! ./venv/bin/python --version > /dev/null 2>&1; then
-        echo "Venv is broken (likely synced from host), recreating..."
-        rm -rf venv
-    fi
-fi
-
-# 2. Create venv as vagrant user if it doesn't exist
+# 1. Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
     echo "Creating new virtual environment..."
     python3 -m venv venv
     chown -R vagrant:vagrant venv
 fi
 
-# 3. Install requirements
+# 2. Install Python dependencies
 echo "Installing dependencies..."
 sudo -u vagrant ./venv/bin/pip install -r requirements.txt
 
-# 4. Start with PM2 as vagrant user (Delete first to ensure env vars are fresh)
+# 3. Start the app with PM2 (delete first to pick up fresh env vars)
 echo "Deploying $SERVICE_NAME with PM2..."
 sudo -u vagrant bash -c "source /etc/profile.d/app_env.sh && pm2 delete $SERVICE_NAME 2>/dev/null || true"
 sudo -u vagrant bash -c "source /etc/profile.d/app_env.sh && pm2 start $START_FILE --name $SERVICE_NAME --interpreter ./venv/bin/python --restart-delay 3000"
 
-# 5. Save PM2 state for vagrant user
+# 4. Save PM2 state so it survives reboots
 sudo -u vagrant bash -c "pm2 save"
 
 echo ">>> $SERVICE_NAME deployment finished."
