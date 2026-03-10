@@ -13,6 +13,20 @@ end
 Vagrant.configure("2") do |config|
   config.vm.box = "hashicorp-education/ubuntu-24-04"
 
+  # Helper: write environment variables into the guest VM.
+  # Accepts a VM config and a hash of { "VAR_NAME" => "value" }.
+  # The variables are written to /etc/profile.d/app_env.sh, which
+  # start_service.sh sources before launching each app with PM2.
+  def set_env(vm, vars)
+    exports = vars.map { |k, v| "export #{k}=#{v}" }.join("\n")
+    vm.vm.provision "env", type: "shell", run: "always", inline: <<-SHELL
+      cat > /etc/profile.d/app_env.sh <<'EOF'
+#{exports}
+EOF
+      chmod +x /etc/profile.d/app_env.sh
+    SHELL
+  end
+
   # -----------------------------------------------------------------
   # GATEWAY VM — API gateway that routes requests to other services
   # -----------------------------------------------------------------
@@ -31,16 +45,13 @@ Vagrant.configure("2") do |config|
     gw.vm.provision "common", type: "shell", path: "scripts/provision_common.sh", run: "once"
     gw.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh", run: "once"
 
-    # Set environment variables (runs on every boot so they stay current)
-    gw.vm.provision "env", type: "shell", run: "always", inline: <<-SHELL
-      cat > /etc/profile.d/app_env.sh <<'EOF'
-export INVENTORY_URL=#{ENV["INVENTORY_URL"]}
-export RABBITMQ_HOST=#{ENV["RABBITMQ_HOST"]}
-export RABBITMQ_USER=#{ENV["RABBITMQ_USER"]}
-export RABBITMQ_PASS=#{ENV["RABBITMQ_PASS"]}
-EOF
-      chmod +x /etc/profile.d/app_env.sh
-    SHELL
+    # Inject environment variables (runs on every boot so they stay current)
+    set_env(gw, {
+      "INVENTORY_URL" => ENV["INVENTORY_URL"],
+      "RABBITMQ_HOST" => ENV["RABBITMQ_HOST"],
+      "RABBITMQ_USER" => ENV["RABBITMQ_USER"],
+      "RABBITMQ_PASS" => ENV["RABBITMQ_PASS"]
+    })
 
     # Start the gateway service (runs on every boot)
     gw.vm.provision "start-gateway", type: "shell", path: "scripts/start_service.sh",
@@ -67,16 +78,13 @@ EOF
       args: [ENV["DB_NAME_MOVIES"], ENV["DB_USER"], ENV["DB_PASS"]], run: "once"
     inv.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh", run: "once"
 
-    # Set environment variables (runs on every boot)
-    inv.vm.provision "env", type: "shell", run: "always", inline: <<-SHELL
-      cat > /etc/profile.d/app_env.sh <<'EOF'
-export DB_USER=#{ENV["DB_USER"]}
-export DB_PASS=#{ENV["DB_PASS"]}
-export DB_NAME=#{ENV["DB_NAME_MOVIES"]}
-export DB_HOST=localhost
-EOF
-      chmod +x /etc/profile.d/app_env.sh
-    SHELL
+    # Inject environment variables (runs on every boot)
+    set_env(inv, {
+      "DB_USER" => ENV["DB_USER"],
+      "DB_PASS" => ENV["DB_PASS"],
+      "DB_NAME" => ENV["DB_NAME_MOVIES"],
+      "DB_HOST" => "localhost"
+    })
 
     # Start the inventory service (runs on every boot)
     inv.vm.provision "start-inventory", type: "shell", path: "scripts/start_service.sh",
@@ -105,17 +113,14 @@ EOF
       args: [ENV["RABBITMQ_USER"], ENV["RABBITMQ_PASS"]], run: "once"
     bill.vm.provision "pm2", type: "shell", path: "scripts/provision_pm2.sh", run: "once"
 
-    # Set environment variables (runs on every boot)
-    bill.vm.provision "env", type: "shell", run: "always", inline: <<-SHELL
-      cat > /etc/profile.d/app_env.sh <<'EOF'
-export DB_USER=#{ENV["DB_USER"]}
-export DB_PASS=#{ENV["DB_PASS"]}
-export DB_NAME=#{ENV["DB_NAME_ORDERS"]}
-export DB_HOST=localhost
-export RABBITMQ_HOST=localhost
-EOF
-      chmod +x /etc/profile.d/app_env.sh
-    SHELL
+    # Inject environment variables (runs on every boot)
+    set_env(bill, {
+      "DB_USER" => ENV["DB_USER"],
+      "DB_PASS" => ENV["DB_PASS"],
+      "DB_NAME" => ENV["DB_NAME_ORDERS"],
+      "DB_HOST" => "localhost",
+      "RABBITMQ_HOST" => "localhost"
+    })
 
     # Start the billing worker (runs on every boot)
     bill.vm.provision "start-billing", type: "shell", path: "scripts/start_service.sh",
