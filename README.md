@@ -2,162 +2,98 @@
 
 A microservices-based movie streaming platform architecture using **Vagrant**, **RabbitMQ**, **PM2**, **Flask**, and **PostgreSQL**.
 
-This project demonstrates a distributed system where services are isolated in independent virtual machines (VMs) to simulate a production environment.
+This project demonstrates a distributed system where services are isolated in independent virtual machines (VMs) to simulate a production environment, emphasizing resilience and automation.
 
-## 🏗 Architecture Overview
+---
 
-The system is composed of three main microservices:
+## 🏗 Architecture & Design
 
-1.  **Gateway VM (`192.168.56.10`)**: The entry point. Routes movie requests via HTTP to Inventory and enqueues billing orders via RabbitMQ.
-2.  **Inventory VM (`192.168.56.11`)**: Manages the movie catalog using a PostgreSQL database (`movies_db`).
-3.  **Billing VM (`192.168.56.12`)**: Processes orders asynchronously from RabbitMQ and persists them to a PostgreSQL database (`orders_db`).
+The system is designed as a set of decoupled services, each running in its own VM to ensure strict boundary isolation.
 
-## 🍏 Prerequisites (macOS Apple Silicon)
+### Component Overview
+1.  **Gateway VM (`192.168.56.10`)**: The entry point. It handles request routing. Movie metadata requests are proxied via HTTP to the Inventory service, while billing orders are enqueued into RabbitMQ to be processed asynchronously.
+2.  **Inventory VM (`192.168.56.11`)**: A CRUD service managing the movie catalog, backed by a PostgreSQL database (`movies_db`).
+3.  **Billing VM (`192.168.56.12`)**: An asynchronous worker that consumes order messages from RabbitMQ and persists them to a PostgreSQL database (`orders_db`).
 
+### Key Design Choices
+-   **Asynchronous Processing**: Using RabbitMQ for billing ensures the Gateway remains highly responsive. Even if the Billing service is under heavy load or temporarily down, orders are safely queued and processed later (Resilience).
+-   **Network Isolation**: Services communicate over a controlled private network (`192.168.56.0/24`). This simulates a real-world VPC environment and enforces clear data flow boundaries (Security).
+-   **Automated Infrastructure**: The entire environment is defined as code. Vagrant handles VM orchestration, while shell scripts in `scripts/` automate the installation of Node.js, Python, PostgreSQL, and RabbitMQ (Portability).
+-   **Process Management**: We use PM2 to manage the Python application life cycle, providing automatic restarts and centralized logging (System Reliability).
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites (macOS Apple Silicon)
 - **VirtualBox 7.0+** (Developer Preview for Arm64)
-- **Vagrant 2.3.4+**
-- **Homebrew** (optional, for local tools)
+- **Vagrant 2.3.4+** 
+- **Environment**: A Terminal and basic knowledge of the command line.
 
-## 🚀 Quick Start (Vagrant)
-
-The entire environment is automated. Simply follow these steps to spin up the cluster:
-
-1.  **Environment Configuration**: Create a `.env` file in the root directory (see [Configuration](#configuration) below).
-2.  **Start the Cluster**:
-    ```bash
-    vagrant up
-    ```
-    *This will create 3 VMs, install all dependencies, and configure the databases/queues automatically.*
-
-3.  **Verify Status**:
-    ```bash
-    vagrant status
-    ```
-
-## ⚙️ Configuration
-
-The project uses a `.env` file to manage credentials and service locations. This file is injected into the VMs during provisioning.
+### 2. Configuration
+Create a `.env` file in the root directory to manage credentials and service locations. This file is injected into the VMs during provisioning.
 
 **Required `.env` Variables:**
 ```env
-DB_USER=postgres
-DB_PASS=postgres
+DB_USER=********
+DB_PASS=********
 DB_NAME_MOVIES=movies_db
 DB_NAME_ORDERS=orders_db
 RABBITMQ_HOST=192.168.56.12
-RABBITMQ_USER=guest
-RABBITMQ_PASS=guest
+RABBITMQ_USER=********
+RABBITMQ_PASS=********
 INVENTORY_URL=http://192.168.56.11:5001
 ```
 
-## 🛠 Vagrant Management
-
-### Starting the VMs
-
+### 3. Spin up the Cluster
+Simply run:
 ```bash
 vagrant up
 ```
+*This command creates 3 VMs, installs all system dependencies, configures databases, and starts the services automatically. It usually takes 4-6 minutes on the first run.*
 
-This command will:
-1. Create and boot all 3 VMs (if not already created)
-2. Run all provisioners automatically to install dependencies
-3. Configure databases and message queues
-4. Start all services via PM2
+---
 
-### Stopping the VMs
+## 🛠 Operation & Management
 
-To gracefully shut down all VMs and free up system resources:
+### Cluster Management
+- **Check Status**: `vagrant status`
+- **Graceful Shutdown**: `vagrant halt`
+- **Access a VM**: `vagrant ssh <vm-name>` (e.g., `vagrant ssh gateway-vm`)
+- **Apply Changes**: `vagrant provision` (useful after editing code or `.env`)
+- **Destroy Cluster**: `vagrant destroy -f` (deletes VMs completely)
 
-```bash
-vagrant halt
-```
-
-To stop a specific VM:
-
-```bash
-vagrant halt <vm-name>    # e.g., vagrant halt billing-vm
-```
-
-### Other Useful Commands
-
-- **Access a VM**: `vagrant ssh <vm-name>` (e.g., `vagrant ssh billing-vm`)
-- **Check VM Status**: `vagrant status`
-- **Reload VM**: `vagrant reload <vm-name>` (restart VM, add `--provision` to re-provision)
-- **Re-run provisioners**: `vagrant provision` or `vagrant provision <vm-name>` — useful after editing `.env`, application code, or provisioning scripts
-- **Destroy VMs**: `vagrant destroy` (removes VMs completely, you'll need to run `vagrant up` again)
-
-### Process Management (Inside VMs)
-
-The services are managed by **PM2** inside the VMs. After SSH-ing into a VM:
-
+### Service Management (Via PM2)
+Once inside a VM via `vagrant ssh`, use these commands to manage the application process:
 ```bash
 pm2 list              # List all running services
-pm2 logs <service>    # View logs for a specific service
-pm2 stop <service>    # Stop a service
-pm2 start <service>   # Start a service
-pm2 restart <service> # Restart a service
+pm2 logs <service>    # View real-time logs
+pm2 restart <service> # Restart the service
 ```
+*Service names are: `gateway-service`, `inventory-service`, and `billing-service`.*
 
-Service names:
-- `gateway-service` (on gateway-vm)
-- `inventory-service` (on inventory-vm)
-- `billing-service` (on billing-vm)
+---
 
-## 📖 API Documentation
+## 📖 API & Documentation
 
-### OpenAPI/Swagger Specification
+### OpenAPI Specification
+The API Gateway is documented using **OpenAPI 3.0**. You can find the full schema in [openapi.yaml](openapi.yaml). 
+- To view interactively, paste the content into the [Swagger Editor](https://editor.swagger.io/).
+- **Gateway Endpoint**: `http://192.168.56.10:5000`
 
-The API Gateway is fully documented using the **OpenAPI 3.0** specification. The documentation file is located at:
-
-**📄 [`openapi.yaml`](openapi.yaml)**
-
-This documentation provides:
-- Complete endpoint descriptions for all Gateway routes
-- Request/response schemas with examples
-- HTTP methods and status codes
-- Authentication requirements (if any)
-- Error response formats
-
-### Viewing the Documentation
-
-You can view the OpenAPI documentation using any of these tools:
-
-1. **Swagger Editor** (Online):
-   - Visit [https://editor.swagger.io/](https://editor.swagger.io/)
-   - Copy and paste the contents of `openapi.yaml`
-   - View interactive documentation with "Try it out" feature
-
-2. **VS Code Extension**:
-   - Install the "OpenAPI (Swagger) Editor" extension
-   - Open `openapi.yaml` in VS Code
-   - Preview the documentation
-
-### API Endpoints Summary
-
-#### Movies (Inventory)
-- `GET /api/movies` - Retrieve all movies (with optional title filter)
-- `POST /api/movies` - Create a new movie
-- `DELETE /api/movies` - Delete all movies
-- `GET /api/movies/{id}` - Get a specific movie
+### Endpoints Summary
+- `GET /api/movies` — List all movies (optional `?title=` filter)
+- `POST /api/movies` — Add a new movie
+- `DELETE /api/movies` — Delete all movies
+- `GET /api/movies/{id}` — Get movie details
 - `PUT /api/movies/{id}` - Update a specific movie
 - `DELETE /api/movies/{id}` - Delete a specific movie
+- `POST /api/billing` — Submit an order to the queue
 
-#### Billing (Orders)
-- `POST /api/billing` - Submit an order to the billing queue
+---
 
-**Gateway URL**: `http://192.168.56.10:5000` (or `http://localhost:8080` if port-forwarded)
+## 🧪 Testing & Deep-Dive
 
-## 🧪 Testing
+- **Testing Guide**: See [testing_guide.md](testing_guide.md) for Postman collections, database inspection queries, and RabbitMQ monitoring steps.
+- **Infrastructure Explainer**: See [infrastructure_explainer.md](infrastructure_explainer.md) for a technical breakdown of how Vagrant, PM2, and the provisioning scripts work.
 
-For detailed instructions on testing the endpoints with Postman, inspecting PostgreSQL databases, and monitoring RabbitMQ, refer to the [Testing & Inspection Guide](testing_guide.md).
-
-## 📖 Infrastructure Deep-Dive
-
-For a detailed explanation of how the `Vagrantfile` and provisioning scripts work — including what Vagrant, PM2, and RabbitMQ do and why — see the [Infrastructure Explainer](infrastructure_explainer.md).
-
-## 📐 Design Choices
-
-- **Asynchronous Billing**: We use RabbitMQ for billing to ensure the Gateway remains responsive even if the Billing service is under heavy load or temporarily down (resilience).
-- **Network Isolation**: Each service has a static IP on a private network (`192.168.56.0/24`) to enforce clear boundaries.
-- **Automated Provisioning**: Shell scripts in the `scripts/` directory handle the "Heavy Lifting" of installing system dependencies, ensuring the environment is identical across different host machines.
-- **Process Resilience**: PM2 is utilized to keep the Python applications running and handle automatic restarts on failure.
