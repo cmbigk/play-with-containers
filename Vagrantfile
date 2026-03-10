@@ -124,6 +124,6 @@ EOF
 
     # Start the billing worker (runs on every boot)
     bill.vm.provision "start-billing", type: "shell", path: "scripts/start_service.sh",
-      args: ["/home/vagrant/billing", "billing-service", "worker.py"], run: "always"
+      args: ["/home/vagrant/billing", "billing_app", "worker.py"], run: "always"
   end
 end

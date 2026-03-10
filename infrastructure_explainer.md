@@ -57,7 +57,7 @@ Runs `apt-get update` and installs Python 3, pip, venv, git, and curl. This is t
 
 ### 5. Environment Variables — `set_env` helper (`run: always`)
 
-Before the services start, the environment variables from the host's `.env` file are written into `/etc/profile.d/app_env.sh` and `/etc/environment` inside the VM. This makes credentials (DB passwords, RabbitMQ host, etc.) available to the application processes.
+Before the services start, the environment variables from the host's `.env` file are written into `/etc/profile.d/app_env.sh` inside the VM. This makes credentials (DB passwords, RabbitMQ host, etc.) available to the application processes.
 
 This runs on **every boot**, so any `.env` change is picked up when you re-provision.
 
@@ -111,13 +111,20 @@ The RabbitMQ web dashboard is accessible at `http://192.168.56.12:15672` while t
 
 ---
 
+## What Is Pika?
+
+Pika is the specialized **Python library** used by both the Gateway and the Billing worker to talk to RabbitMQ. While RabbitMQ is the "post office," Pika is the "delivery truck" that knows the specific protocol (AMQP) required to send and receive messages accurately.
+
+- **In the Gateway**: Pika is used to **publish** order data to the `billing_queue`.
+- **In the Billing Worker**: Pika is used to **subscribe** to the queue and "listen" for incoming messages in real-time.
+
+---
+
 ## Environment Variables and the `.env` File
 
 Secrets and configuration (database credentials, service IPs) are never hardcoded. They live in a `.env` file on the host machine (not committed to git). The `Vagrantfile` reads this file at startup and the `set_env` helper injects each variable into the VM's global environment during provisioning.
 
-The `set_env` helper writes to two places:
-- `/etc/profile.d/app_env.sh` — loaded for interactive shells and sourced by `start_service.sh`
-- `/etc/environment` — loaded system-wide, including for processes started by systemd (like PM2)
+The `set_env` helper writes to `/etc/profile.d/app_env.sh`, which is automatically loaded for interactive shells and is explicitly sourced by `start_service.sh` before it launches the application. This ensures that the Python programs can access credentials via `os.environ`.
 
 ---
 

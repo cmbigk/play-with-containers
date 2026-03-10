@@ -70,7 +70,7 @@ pm2 list              # List all running services
 pm2 logs <service>    # View real-time logs
 pm2 restart <service> # Restart the service
 ```
-*Service names are: `gateway-service`, `inventory-service`, and `billing-service`.*
+*Service names are: `gateway-service`, `inventory-service`, and `billing_app`.*
 
 ---
 

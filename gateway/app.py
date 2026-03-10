@@ -13,26 +13,6 @@ RABBITMQ_PASS = os.environ.get("RABBITMQ_PASS", "guest")
 QUEUE_NAME = "billing_queue"
 
 
-def publish_to_billing(order_data):
-    """Publish an order payload to the RabbitMQ billing queue."""
-    credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials)
-    )
-    channel = connection.channel()
-    channel.queue_declare(queue=QUEUE_NAME, durable=True)
-
-    channel.basic_publish(
-        exchange="",
-        routing_key=QUEUE_NAME,
-        body=json.dumps(order_data),
-        properties=pika.BasicProperties(
-            delivery_mode=2,  # make message persistent
-        ),
-    )
-    connection.close()
-
-
 @app.route("/api/movies", methods=["GET", "POST", "DELETE"], strict_slashes=False)
 def proxy_movies():
     """Proxy requests related to the movies collection to the Inventory service."""
@@ -116,6 +96,26 @@ def create_billing_order():
     except Exception as e:
         print(f"Failed to publish message: {e}")
         return jsonify({"error": "Billing service queue unavailable"}), 503
+
+
+def publish_to_billing(order_data):
+    """Publish an order payload to the RabbitMQ billing queue."""
+    credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials)
+    )
+    channel = connection.channel()
+    channel.queue_declare(queue=QUEUE_NAME, durable=True)
+
+    channel.basic_publish(
+        exchange="",
+        routing_key=QUEUE_NAME,
+        body=json.dumps(order_data),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make message persistent
+        ),
+    )
+    connection.close()
 
 
 if __name__ == "__main__":

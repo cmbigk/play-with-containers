@@ -233,7 +233,7 @@ Your VMs will be structured as follows:
 
 - `gateway-vm`: This VM will only contain the `api-gateway-app`.
 - `inventory-vm`: This VM will contain the `inventory-app` API and the database `movies_db`.
-- `billing-vm`: This VM will contain the `billing-app` API, the database `billing_db`, `orders` table and RabbitMQ.
+- `billing-vm`: This VM will contain the `billing_app` API, the database `billing_db`, `orders` table and RabbitMQ.
 
 > Vagrant is intended for development environments and must not be used in production.
 

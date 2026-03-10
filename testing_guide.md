@@ -105,7 +105,7 @@ This publishes a message to the RabbitMQ queue on `billing-vm`. The response is 
 To confirm the order was processed, check PM2 logs on `billing-vm`:
 
 ```bash
-vagrant ssh billing-vm -c "pm2 logs billing-service --nostream --lines 20"
+vagrant ssh billing-vm -c "pm2 logs billing_app --nostream --lines 20"
 ```
 
 ---
