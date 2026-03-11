@@ -25,4 +25,7 @@ echo ">>> Registering PM2 as a systemd startup service for vagrant user..."
 #    immediately with administrative privileges.
 sudo -u vagrant bash -c "pm2 startup systemd -u vagrant --hp /home/vagrant" | tail -1 | bash
 
+# Version where root owns the PM2 process list
+# pm2 startup systemd -u root --hp /root | tail -1 | bash
+
 echo ">>> PM2 installed and registered with systemd."
