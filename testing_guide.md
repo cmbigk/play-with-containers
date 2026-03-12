@@ -1,6 +1,6 @@
 # Testing & Inspection Guide
 
-This guide covers how to test the API with Postman and how to inspect the internal state of the databases and message broker running inside the Vagrant VMs.
+This guide covers how to test the API with Postman and how to inspect the internal state of the databases and message broker running inside the Docker containers.
 
 ## Prerequisites
 
@@ -88,7 +88,7 @@ Import the collection from the `postman/` folder, or create requests manually as
 
 ### Place a Billing Order
 
-This publishes a message to the RabbitMQ queue on `rabbitmq-server`. The response is immediate; processing happens asynchronously automatically by `billing-app`.
+This publishes a message to the RabbitMQ queue on `RabbitMQ`. The response is immediate; processing happens asynchronously automatically by `billing-app`.
 
 - **Method**: `POST`
 - **URL**: `http://localhost:3000/api/billing`
@@ -121,7 +121,7 @@ To verify that RabbitMQ safely holds messages when the billing service is tempor
 2. Send a few orders using the `POST /api/billing` request above. You should still get a `200 OK` response.
 3. Check the RabbitMQ queue to see the messages waiting:
    ```bash
-   docker exec -it rabbitmq-server rabbitmqctl list_queues
+   docker exec -it RabbitMQ rabbitmqctl list_queues
    ```
 4. Start the billing container back up:
    ```bash

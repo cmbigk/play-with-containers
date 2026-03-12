@@ -3,7 +3,7 @@ FROM debian:bullseye-slim
 RUN apt-get update && \
     apt-get install -y rabbitmq-server gosu && \
     rm -rf /var/lib/apt/lists/*
-
+    
 # Pre-enable management plugin
 RUN rabbitmq-plugins enable rabbitmq_management
 
