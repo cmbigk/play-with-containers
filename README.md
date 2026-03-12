@@ -22,8 +22,7 @@ The system consists of the following 6 services:
 
 ## Configuration
 
-The system is configured using an environment file. Use the existing `.env` file at the root of the project or create one with the following variables:
-
+The system is configured using an environment file.
 ```env
 # Inventory Database
 INVENTORY_DB_NAME=movies_db
@@ -39,9 +38,6 @@ BILLING_DB_PASSWORD=******
 RABBITMQ_USER=******
 RABBITMQ_PASSWORD=******
 ```
-
-> [!IMPORTANT]
-> Ensure the `.env` file is present before running the setup commands.
 
 ## Setup & Run
 
