@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  inventory-database:
+    build:
+      context: ./inventory-database
+    image: inventory-database
+    container_name: inventory-database
+    restart: on-failure
+    environment:
+      - DB_USER=${INVENTORY_DB_USER}
+      - DB_PASS=${INVENTORY_DB_PASSWORD}
+      - DB_NAME=${INVENTORY_DB_NAME}
+    networks:
+      - app-network
+    volumes:
+      - inventory-database:/var/lib/postgresql/data
+
+  billing-database:
+    build:
+      context: ./billing-database
+    image: billing-database
+    container_name: billing-database
+    restart: on-failure
+    environment:
+      - DB_USER=${BILLING_DB_USER}
+      - DB_PASS=${BILLING_DB_PASSWORD}
+      - DB_NAME=${BILLING_DB_NAME}
+    networks:
+      - app-network
+    volumes:
+      - billing-database:/var/lib/postgresql/data
+
+  rabbitmq-server:
+    build:
+      context: ./rabbitmq-server
+    image: rabbitmq-server
+    container_name: rabbitmq-server
+    restart: on-failure
+    environment:
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASSWORD}
+    networks:
+      - app-network
+
+  inventory-app:
+    build:
+      context: ./inventory-app
+    image: inventory-app
+    container_name: inventory-app
+    restart: on-failure
+    environment:
+      - DB_HOST=inventory-database
+      - DB_PORT=5432
+      - DB_USER=${INVENTORY_DB_USER}
+      - DB_PASS=${INVENTORY_DB_PASSWORD}
+      - DB_NAME=${INVENTORY_DB_NAME}
+    networks:
+      - app-network
+    depends_on:
+      - inventory-database
+
+  billing-app:
+    build:
+      context: ./billing-app
+    image: billing-app
+    container_name: billing-app
+    restart: on-failure
+    environment:
+      - DB_HOST=billing-database
+      - DB_PORT=5432
+      - DB_USER=${BILLING_DB_USER}
+      - DB_PASS=${BILLING_DB_PASSWORD}
+      - DB_NAME=${BILLING_DB_NAME}
+      - RABBITMQ_HOST=rabbitmq-server
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASSWORD}
+    networks:
+      - app-network
+    depends_on:
+      - billing-database
+      - rabbitmq-server
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    image: api-gateway
+    container_name: api-gateway
+    restart: on-failure
+    environment:
+      - INVENTORY_URL=http://inventory-app:8080
+      - RABBITMQ_HOST=rabbitmq-server
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    volumes:
+      - api-gateway:/var/logs/api-gateway
+    depends_on:
+      - inventory-app
+      - billing-app
+      - rabbitmq-server
+
+networks:
+  app-network:
+    name: app-network
+
+volumes:
+  inventory-database:
+  billing-database:
+  api-gateway:

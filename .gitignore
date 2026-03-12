@@ -1,3 +1,11 @@
+# Environment Variables
+.env
+
+# Dependencies
+__pycache__/
+*.pyc
+
+# OS
 .DS_Store
 
 # Environments
