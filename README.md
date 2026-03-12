@@ -14,19 +14,6 @@ This project containerizes a set of microservices including an API Gateway, Inve
 - **billing-database**: PostgreSQL for orders.
 - **RabbitMQ**: Message broker for async ordering.
 
-## Configuration
-The system uses environment variables for configuration. Create or use the existing `.env` file at the root of the project with the following shape:
-```env
-INVENTORY_DB_NAME=movies_db
-INVENTORY_DB_USER=inventory_user
-INVENTORY_DB_PASSWORD=inventory_pass_123
-BILLING_DB_NAME=orders_db
-BILLING_DB_USER=billing_user
-BILLING_DB_PASSWORD=billing_pass_123
-RABBITMQ_USER=guest
-RABBITMQ_PASSWORD=guest
-```
-
 ## Setup & Run
 To build the images and start all the containers in the background, run:
 ```bash
@@ -70,11 +57,6 @@ curl -X POST http://localhost:3000/api/billing \
 
 This request will succeed and queue the message even if the `billing-app` is temporarily down.
 
-## Teardown
-To stop all services and remove the custom network and named volumes (deleting all database and queue data):
-```bash
-docker-compose down -v
-```
 ### Tear Down
 
 To stop the services and remove the networking:
