@@ -7,12 +7,12 @@ This project containerizes a set of microservices including an API Gateway, Inve
 - Docker Compose: 1.29+ (or V2)
 
 ## Architecture
-- **api-gateway**: Routes incoming requests to the appropriate backend service and handles queue publishing.
-- **inventory-app**: Manages the movie inventory, interfacing with a PostgreSQL database.
-- **billing-app**: Consumes order messages from a RabbitMQ queue and saves them to a database.
-- **inventory-database**: PostgreSQL database storing movie data for the inventory app.
-- **billing-database**: PostgreSQL database storing billing orders for the billing app.
-- **rabbitmq-server**: RabbitMQ instance acting as a message broker between the gateway and billing app.
+- **api-gateway-app**: Entry point (Flask), routes requests.
+- **inventory-app**: Manages movie database (Flask).
+- **billing-app**: Processes orders from queue (Python/Pika).
+- **inventory-database**: PostgreSQL for movies.
+- **billing-database**: PostgreSQL for orders.
+- **RabbitMQ**: Message broker for async ordering.
 
 ## Configuration
 The system uses environment variables for configuration. Create or use the existing `.env` file at the root of the project with the following shape:
@@ -75,3 +75,21 @@ To stop all services and remove the custom network and named volumes (deleting a
 ```bash
 docker-compose down -v
 ```
+### Tear Down
+
+To stop the services and remove the networking:
+```bash
+docker-compose down
+```
+
+To stop services and **delete all data** (volumes):
+```bash
+docker-compose down -v
+```
+
+### RabbitMQ Management UI
+
+You can view the message queue visually by opening:
+[http://localhost:15672](http://localhost:15672)
+
+**Credentials**: Use the `RABBITMQ_USER` and `RABBITMQ_PASS` from your `.env` file. (By default: `rmq_user` / `rmq_pass`)

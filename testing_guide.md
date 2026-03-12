@@ -10,7 +10,7 @@ Before testing, confirm the Docker containers and services are running:
 docker-compose ps
 ```
 
-All 6 containers (`api-gateway`, `inventory-app`, `billing-app`, `inventory-database`, `billing-database`, `rabbitmq-server`) should show up as running. To view the logs for the billing app specifically:
+All 6 containers (`api-gateway-app`, `inventory-app`, `billing-app`, `inventory-database`, `billing-database`, `RabbitMQ`) should show up as running. To view the logs for the billing app specifically:
 
 ```bash
 docker logs billing-app
@@ -168,12 +168,15 @@ SELECT * FROM orders;
 
 ---
 
-## 3. RabbitMQ — Message Broker
+### Visual UI — Management Plugin
 
-RabbitMQ runs on the `rabbitmq-server` container. Credentials are set by `RABBITMQ_USER` / `RABBITMQ_PASS` in `.env`.
+You can also view the queues, exchanges, and messages visually in your browser:
+
+- **Link**: [http://localhost:15672](http://localhost:15672)
+- **Login**: Use the credentials from your `.env` file (`RABBITMQ_USER` / `RABBITMQ_PASS`).
 
 ### CLI — List Queues
 
 ```bash
-docker exec -it rabbitmq-server rabbitmqctl list_queues
+docker exec -it RabbitMQ rabbitmqctl list_queues
 ```

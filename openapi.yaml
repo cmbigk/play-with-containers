@@ -14,10 +14,8 @@ info:
     name: CRUD Master Team
     
 servers:
-  - url: http://192.168.56.10:5000
-    description: Gateway VM (Production)
-  - url: http://localhost:8080
-    description: Local Development (Port-forwarded)
+  - url: http://localhost:3000
+    description: Docker Gateway (Production)
 
 tags:
   - name: Movies
@@ -95,7 +93,7 @@ paths:
               description: "A hacker discovers reality is simulated"
       responses:
         '201':
-          description: Movie created successfully
+          description: Movie created successfully (or 200 in some audit cases)
           content:
             application/json:
               schema:
@@ -297,9 +295,9 @@ paths:
             schema:
               $ref: '#/components/schemas/BillingOrder'
             example:
-              user_id: "123"
-              number_of_items: "5"
-              total_amount: "99.99"
+              user_id: "20"
+              number_of_items: "99"
+              total_amount: "250"
       responses:
         '200':
           description: Order successfully queued for processing
@@ -376,15 +374,15 @@ components:
         user_id:
           type: string
           description: Unique identifier of the user placing the order
-          example: "123"
+          example: "20"
         number_of_items:
           type: string
           description: Number of items in the order
-          example: "5"
+          example: "99"
         total_amount:
           type: string
           description: Total cost of the order
-          example: "99.99"
+          example: "250"
     
     Error:
       type: object
